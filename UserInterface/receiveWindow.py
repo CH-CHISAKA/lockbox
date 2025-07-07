@@ -55,10 +55,30 @@ class ReceiveMessagePage(QWidget):
 
         self.setLayout(layout)
 
-        # Apply linear gradient background
+        # Apply linear gradient background with proper PyQt syntax
         self.setStyleSheet("""
             QWidget {
-                background: linear-gradient(to bottom, #141A20, #212A34);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #141A20, stop:1 #212A34);
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QLabel {
+                color: #ffffff;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QLineEdit, QTextEdit {
+                background-color: #2e3b47;
+                color: #ffffff;
+                border: 1px solid #4a5a6a;
+                border-radius: 4px;
+                padding: 8px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QLineEdit:focus, QTextEdit:focus {
+                border: 2px solid #4CAF50;
+            }
+            QPushButton {
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
         """)
 

@@ -12,7 +12,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.controller = controller
         self.setWindowTitle("LockBox")
-        self.resize(600, 400)
+        
+        # Better window management
+        self.resize(800, 600)
+        self.setMinimumSize(600, 400)
+        
+        # Center the window on screen
+        self._center_window()
 
         # Define color scheme
         self._define_colors()
@@ -50,10 +56,12 @@ class MainWindow(QMainWindow):
         # Server state
         self.server_running = False
 
-        # Apply linear gradient background
+        # Apply linear gradient background with proper PyQt syntax
         self.setStyleSheet("""
             QMainWindow {
-                background: linear-gradient(to bottom, #141A20, #212A34);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #141A20, stop:1 #212A34);
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
         """)
 
@@ -69,11 +77,13 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(f"""
             QMainWindow {{
                 background-color: {self.columbia_blue};
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QWidget {{
                 background-color: {self.columbia_blue};
                 color: {self.cal_poly_green};
                 font-size: 15px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QPushButton {{
                 background-color: {self.air_force_blue};
@@ -82,6 +92,7 @@ class MainWindow(QMainWindow):
                 border-radius: 6px;
                 padding: 10px 18px;
                 margin: 6px 0;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QPushButton:hover {{
                 background-color: {self.sea_green};
@@ -89,6 +100,7 @@ class MainWindow(QMainWindow):
             QLabel {{
                 color: {self.cal_poly_green};
                 padding: 4px 0;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QTextEdit {{
                 background-color: {self.cadet_gray};
@@ -96,11 +108,13 @@ class MainWindow(QMainWindow):
                 border-radius: 8px;
                 padding: 12px;
                 font-size: 15px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QStatusBar {{
                 background-color: {self.air_force_blue};
                 color: white;
                 padding: 6px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
         """)
 
@@ -200,3 +214,12 @@ class MainWindow(QMainWindow):
     def show_log(self):
         """Shows the log in the central area"""
         self.set_central_widget(self.central_log)
+
+    def _center_window(self):
+        """Center the window on the screen"""
+        from PyQt6.QtGui import QGuiApplication
+        screen = QGuiApplication.primaryScreen().geometry()
+        size = self.geometry()
+        x = (screen.width() - size.width()) // 2
+        y = (screen.height() - size.height()) // 2
+        self.move(x, y)

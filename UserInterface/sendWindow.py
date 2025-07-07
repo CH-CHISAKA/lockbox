@@ -3,6 +3,9 @@ from PyQt6.QtWidgets import (
     QMessageBox, QTextEdit, QHBoxLayout
 )
 import re
+import socket
+import uuid
+import platform
 
 class SendMessagePage(QWidget):
     def __init__(self, send_callback, encrypt_only_callback=None):
@@ -31,6 +34,16 @@ class SendMessagePage(QWidget):
         self.ip_dropdown = QComboBox()
         layout.addWidget(self.ip_dropdown)
 
+        # Local Device Info
+        local_info_label = QLabel("Local Device Information:")
+        local_info_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        layout.addWidget(local_info_label)
+        
+        self.local_device_info = QLabel(self._get_local_device_info())
+        self.local_device_info.setStyleSheet("color: #b0c4de; font-size: 12px; margin-bottom: 10px;")
+        self.local_device_info.setWordWrap(True)
+        layout.addWidget(self.local_device_info)
+
         # Button Layout
         button_layout = QHBoxLayout()
         self._add_action_buttons(button_layout)
@@ -41,10 +54,12 @@ class SendMessagePage(QWidget):
 
         self.setLayout(layout)
 
-        # Styling
+        # Styling with proper PyQt syntax
         self.setStyleSheet("""
             QWidget {
-                background: linear-gradient(to bottom, #141A20, #212A34);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #141A20, stop:1 #212A34);
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
             QPushButton {
                 background-color: #4CAF50;
@@ -53,18 +68,46 @@ class SendMessagePage(QWidget):
                 font-weight: bold;
                 border-radius: 4px;
                 border: none;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
             QPushButton:hover {
                 background-color: #45a049;
             }
             QLabel {
                 color: white;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
             QLineEdit, QTextEdit {
                 background-color: #2e3b47;
                 color: white;
-                padding: 6px;
+                padding: 8px;
+                border: 1px solid #4a5a6a;
                 border-radius: 4px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QLineEdit:focus, QTextEdit:focus {
+                border: 2px solid #4CAF50;
+            }
+            QComboBox {
+                background-color: #2e3b47;
+                color: white;
+                padding: 8px;
+                border: 1px solid #4a5a6a;
+                border-radius: 4px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QComboBox:focus {
+                border: 2px solid #4CAF50;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid white;
+                margin-right: 5px;
             }
         """)
 
@@ -87,15 +130,7 @@ class SendMessagePage(QWidget):
         self.encrypted_output.setVisible(False)
         layout.addWidget(self.encrypted_output)
 
-    def set_ip_choices(self, device_list):
-        """Update the device list in the dropdown menu."""
-        self.ip_dropdown.clear()
-        self.device_map = {}
-        for entry in device_list:
-            name = entry['device_name']
-            ip = entry['ip']
-            self.device_map[name] = ip
-            self.ip_dropdown.addItem(name)
+
 
     def get_inputs(self):
         """Retrieve user inputs for message sending."""
@@ -172,3 +207,58 @@ class SendMessagePage(QWidget):
         self.encrypted_label.setVisible(True)
         self.encrypted_output.setVisible(True)
         self.encrypted_output.setPlainText(encrypted_msg)
+
+    def _get_local_device_info(self) -> str:
+        """Get local device information including hostname, IP, and MAC address."""
+        try:
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            mac_address = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) 
+                                   for ele in range(0, 8*6, 8)][::-1])
+            system_info = f"{platform.system()} {platform.release()}"
+            
+            return (f"Hostname: {hostname}\n"
+                   f"IP Address: {local_ip}\n"
+                   f"MAC Address: {mac_address}\n"
+                   f"System: {system_info}")
+        except Exception as e:
+            return f"Unable to retrieve device information: {str(e)}"
+
+    def _get_enhanced_local_ip(self):
+        """Get local IP with better detection."""
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # Connect to a non-routable address to determine local IP
+            s.connect(('10.255.255.255', 1))
+            IP = s.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            s.close()
+        return IP
+
+    def set_ip_choices(self, device_list):
+        """Update the device list in the dropdown menu with enhanced formatting."""
+        self.ip_dropdown.clear()
+        self.device_map = {}
+        
+        # Add local device information to the list
+        try:
+            local_hostname = socket.gethostname()
+            local_ip = self._get_enhanced_local_ip()
+            local_entry = f"🏠 {local_hostname} (Local - {local_ip})"
+            self.device_map[local_entry] = local_ip
+            self.ip_dropdown.addItem(local_entry)
+            
+            # Add separator
+            self.ip_dropdown.insertSeparator(1)
+        except Exception:
+            pass
+        
+        for entry in device_list:
+            name = entry['device_name']
+            ip = entry['ip']
+            # Enhanced display format
+            display_name = f"🌐 {name} ({ip})"
+            self.device_map[display_name] = ip
+            self.ip_dropdown.addItem(display_name)
