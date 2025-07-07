@@ -1,4 +1,4 @@
-#!/Users/fatmasarahabdikadir/Desktop/lockbox/.venv/bin/python
+#!/Users/mac/Desktop/lockbox/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

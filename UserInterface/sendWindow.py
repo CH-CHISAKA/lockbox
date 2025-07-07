@@ -1,9 +1,8 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, 
+    QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox,
     QMessageBox, QTextEdit, QHBoxLayout
 )
 import re
-
 
 class SendMessagePage(QWidget):
     def __init__(self, send_callback, encrypt_only_callback=None):
@@ -32,7 +31,7 @@ class SendMessagePage(QWidget):
         self.ip_dropdown = QComboBox()
         layout.addWidget(self.ip_dropdown)
 
-        # Button Layout (Send and Encrypt Only)
+        # Button Layout
         button_layout = QHBoxLayout()
         self._add_action_buttons(button_layout)
         layout.addLayout(button_layout)
@@ -42,7 +41,7 @@ class SendMessagePage(QWidget):
 
         self.setLayout(layout)
 
-        # Apply linear gradient background and button styling
+        # Styling
         self.setStyleSheet("""
             QWidget {
                 background: linear-gradient(to bottom, #141A20, #212A34);
@@ -61,13 +60,7 @@ class SendMessagePage(QWidget):
             QLabel {
                 color: white;
             }
-            QLineEdit {
-                background-color: #2e3b47;
-                color: white;
-                padding: 6px;
-                border-radius: 4px;
-            }
-            QTextEdit {
+            QLineEdit, QTextEdit {
                 background-color: #2e3b47;
                 color: white;
                 padding: 6px;
@@ -97,7 +90,7 @@ class SendMessagePage(QWidget):
     def set_ip_choices(self, device_list):
         """Update the device list in the dropdown menu."""
         self.ip_dropdown.clear()
-        self.device_map = {}  # device_name -> ip
+        self.device_map = {}
         for entry in device_list:
             name = entry['device_name']
             ip = entry['ip']
@@ -107,15 +100,16 @@ class SendMessagePage(QWidget):
     def get_inputs(self):
         """Retrieve user inputs for message sending."""
         message = self.message_input.text().strip()
-        phone = self.phone_input.text().strip()
+        phone = self.normalize_kenyan_number(self.phone_input.text().strip())
         device_name = self.ip_dropdown.currentText()
         ip = self.device_map.get(device_name, device_name)
         return message, phone, ip
 
     def validate_and_send(self):
-        """Validate input and trigger the send callback."""
-        if not self._is_valid_phone_number(self.phone_input.text()):
-            QMessageBox.warning(self, "Invalid Phone Number", "Please enter a valid Kenyan phone number (e.g., 0712345678 or +254712345678).")
+        phone = self.phone_input.text().strip()
+        if not self._is_valid_phone_number(phone):
+            QMessageBox.warning(self, "Invalid Phone Number",
+                "Please enter a valid Kenyan phone number (e.g., 07XXXXXXXX, 011XXXXXXX, +2547XXXXXXXX, +25411XXXXXXX).")
             return
         message, phone, ip = self.get_inputs()
         if not message:
@@ -124,9 +118,10 @@ class SendMessagePage(QWidget):
         self.send_callback()
 
     def validate_and_encrypt_only(self):
-        """Validate input and trigger the encrypt-only callback."""
-        if not self._is_valid_phone_number(self.phone_input.text()):
-            QMessageBox.warning(self, "Invalid Phone Number", "Please enter a valid Kenyan phone number (e.g., 0712345678 or +254712345678).")
+        phone = self.phone_input.text().strip()
+        if not self._is_valid_phone_number(phone):
+            QMessageBox.warning(self, "Invalid Phone Number",
+                "Please enter a valid Kenyan phone number (e.g., 07XXXXXXXX, 011XXXXXXX, +2547XXXXXXXX, +25411XXXXXXX).")
             return
         message, phone, ip = self.get_inputs()
         if not message:
@@ -136,12 +131,44 @@ class SendMessagePage(QWidget):
             self.encrypt_only_callback()
 
     def _is_valid_phone_number(self, phone: str) -> bool:
-        """Validates Kenyan phone numbers (starts with 07 or +2547 and has 10/13 digits)."""
-        pattern = r"^(07\d{8}|(\+2547\d{8}))$"
-        return bool(re.match(pattern, phone))
+        """Validates Kenyan phone numbers including all valid prefixes."""
+
+        # Valid 07xx and 01xx prefixes
+        valid_prefixes = (
+            # 07xx legacy
+            "070", "071", "072", "073", "0740", "0741", "0742", "0743", "0745", "0746",
+            "0748", "0757", "0758", "0759", "0768", "0769", "0770", "0771", "0772",
+            "0780", "0781", "0782", "0783", "0784", "0785", "0786", "0787", "0788",
+            "0790", "0791", "0792", "0793", "0794", "0795", "0796", "0797", "0798", "0799",
+            # 01xx current
+            "0100", "0101", "0102", "0103", "0104", "0105", "0106", "0107", "0108", "0109",
+            "0110", "0111", "0112", "0113", "0114", "0115", "0116", "0117", "0118", "0119"
+        )
+
+        phone = phone.strip()
+
+        # Local: 0XXXXXXXXX
+        if phone.startswith("0") and len(phone) == 10:
+            return any(phone.startswith(p) for p in valid_prefixes)
+
+        # International: +254XXXXXXXXX
+        elif phone.startswith("+254") and len(phone) == 13:
+            suffix = phone[4:]
+            return any(suffix.startswith(p[1:]) for p in valid_prefixes)  # compare with stripped prefix
+
+        return False
+
+    def normalize_kenyan_number(self, number: str) -> str:
+        """Converts local Kenyan numbers to +254 format (E.164)."""
+        number = number.strip()
+        if number.startswith("0"):
+            return "+254" + number[1:]
+        elif number.startswith("+254"):
+            return number
+        else:
+            return number
 
     def show_encrypted_message(self, encrypted_msg: str):
-        """Display the encrypted message in the UI."""
         self.encrypted_label.setVisible(True)
         self.encrypted_output.setVisible(True)
         self.encrypted_output.setPlainText(encrypted_msg)

@@ -54,7 +54,7 @@ class SecureMessengerController:
             return
         
         try:
-            # Attempt to send the secure message to the peer
+            # Attempt to send the LockBox message to the peer
             status = send_secure_message_to_peer(message, otp, ip)
             if status == 200:
                 QMessageBox.information(self.main_window, "Success", "Message sent!")
@@ -116,7 +116,11 @@ class SecureMessengerController:
         Starts the local server in a separate process. Displays status in the main window.
         """
         if self.server_process is None:
-            self.server_process = subprocess.Popen([sys.executable, "networking\\server.py"])
+            self.server_process = subprocess.Popen(
+    ["python3", "networking/server.py"],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
             self.main_window.update_server_status(True)
             QMessageBox.information(self.main_window, "Server", "Local server started.")
 

@@ -8,20 +8,39 @@ app = Flask(__name__)
 # For now, we'll use a simple in-memory solution.
 message_store = {}
 
+# @app.route('/receive', methods=['POST'])
+# def receive():
+#     try:
+#         data = request.get_json()
+#         encrypted_msg = data.get('encrypted_msg', '')
+        
+#         if not encrypted_msg:
+#             return jsonify({"error": "Missing encrypted_msg"}), 400
+
+#         # Here, for simplicity, we store it in-memory; you may want to store it in a DB.
+#         message_store['encrypted_msg'] = encrypted_msg
+#         return 'Received', 200
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
 @app.route('/receive', methods=['POST'])
 def receive():
     try:
+        print(f"🔔 Incoming request: {request.json}")
         data = request.get_json()
         encrypted_msg = data.get('encrypted_msg', '')
         
         if not encrypted_msg:
+            print("❌ Missing encrypted_msg")
             return jsonify({"error": "Missing encrypted_msg"}), 400
 
-        # Here, for simplicity, we store it in-memory; you may want to store it in a DB.
         message_store['encrypted_msg'] = encrypted_msg
+        print("✅ Message received and stored.")
         return 'Received', 200
     except Exception as e:
+        print(f"❌ Exception occurred: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/get_message', methods=['GET'])
 def get_message():

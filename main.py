@@ -12,14 +12,14 @@ def create_app():
     try:
         # Initialize the application
         app = QApplication(sys.argv)
-        app.setApplicationName("Secure Messenger")
+        app.setApplicationName("LockBox")
 
         # Initialize the controller
         controller = SecureMessengerController(None)
 
         # Ensure controller is properly initialized
         if not controller:
-            raise ValueError("Failed to initialize SecureMessengerController.")
+            raise ValueError("Failed to initialize LockBoxController.")
 
         # Create the main window, passing the controller
         window = MainWindow(controller)
@@ -29,7 +29,7 @@ def create_app():
             raise ValueError("Failed to initialize the main window.")
 
         # Assign the controller's main window reference
-        controller.main_window = window
+        controller.main_window = window #check if this is needed
 
         # Apply a linear gradient background to the window
         window.setStyleSheet("""

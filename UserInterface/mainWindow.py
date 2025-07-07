@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
     def __init__(self, controller):
         super().__init__()
         self.controller = controller
-        self.setWindowTitle("Secure Messenger")
+        self.setWindowTitle("LockBox")
         self.resize(600, 400)
 
         # Define color scheme
@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.central_area.setLayout(self.central_layout)
 
         # Initialize central area log
-        self.central_log = QTextEdit("Welcome to Secure Messenger.")
+        self.central_log = QTextEdit("Welcome to LockBox.")
         self.central_log.setReadOnly(True)
         self.central_log.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         self.central_layout.addWidget(self.central_log)

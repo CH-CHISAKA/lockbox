@@ -74,7 +74,7 @@ class AboutPage(QWidget):
         """
         # Define the informational text shown on the About page
         info_text = (
-            "Secure Messenger\n\n"
+            "LockBox\n"
             "A simple, secure messaging application for sending and receiving encrypted messages.\n"
             "Developed as a project for BBT4102 Cryptography and Network Security.\n\n"
             "By:\n"
