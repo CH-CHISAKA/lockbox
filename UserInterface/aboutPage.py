@@ -38,12 +38,19 @@ class AboutPage(QWidget):
         # Apply the layout to the current widget
         self.setLayout(layout)
 
+        # Apply linear gradient background
+        self.setStyleSheet("""
+            QWidget {
+                background: linear-gradient(to bottom, #141A20, #212A34);
+            }
+        """)
+
     def _create_title_label(self) -> QLabel:
         """
         Creates and returns a QLabel styled as the title for the About page.
         """
         # Initialize the label with the title text
-        label = QLabel("About Secure Messenger")
+        label = QLabel("About LockBox")
         
         # Apply inline CSS styling to the label: font size, weight, and color
         label.setStyleSheet("""
