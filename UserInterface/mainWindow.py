@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QTextEdit, QStatusBar, QMessageBox, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QLabel
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 from UserInterface.sendWindow import SendMessagePage
 from UserInterface.receiveWindow import ReceiveMessagePage
 from UserInterface.aboutPage import AboutPage
@@ -11,13 +12,11 @@ class MainWindow(QMainWindow):
     def __init__(self, controller):
         super().__init__()
         self.controller = controller
-        self.setWindowTitle("LockBox")
-        self.resize(600, 400)
+        self.setWindowTitle("🔒 LockBox - Secure Messaging")
+        self.resize(800, 600)
+        self.setMinimumSize(700, 500)
 
-        # Define color scheme
-        self._define_colors()
-
-        # Main stylesheet setup
+        # Main stylesheet setup with new gradient theme
         self._setup_styles()
 
         # Sidebar setup
@@ -26,14 +25,32 @@ class MainWindow(QMainWindow):
         # Central area setup
         self.central_area = QWidget()
         self.central_layout = QVBoxLayout()
-        self.central_layout.setContentsMargins(24, 24, 24, 24)  # Padding inside central area
-        self.central_layout.setSpacing(16)
+        self.central_layout.setContentsMargins(30, 30, 30, 30)  # Increased padding
+        self.central_layout.setSpacing(20)
         self.central_area.setLayout(self.central_layout)
 
-        # Initialize central area log
-        self.central_log = QTextEdit("Welcome to LockBox.")
+        # Initialize central area log with welcome message
+        self.central_log = QTextEdit()
         self.central_log.setReadOnly(True)
         self.central_log.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+        welcome_text = """
+🔒 Welcome to LockBox
+
+Your secure messaging companion for encrypted communications.
+
+Features:
+• End-to-end encryption with AES-256
+• RSA key pair generation
+• Secure OTP verification via SMS
+• Network device discovery
+• Real-time message encryption/decryption
+
+Get started by clicking 'Send Message' to encrypt and send a secure message,
+or 'Receive Message' to decrypt an incoming message.
+
+Stay secure! 🛡️
+        """
+        self.central_log.setPlainText(welcome_text.strip())
         self.central_layout.addWidget(self.central_log)
 
         # Main layout: sidebar + central area
@@ -50,69 +67,117 @@ class MainWindow(QMainWindow):
         # Server state
         self.server_running = False
 
-        # Apply linear gradient background
+    def _setup_styles(self):
+        """Enhanced stylesheet with new gradient theme and improved UX"""
         self.setStyleSheet("""
             QMainWindow {
-                background: linear-gradient(to bottom, #141A20, #212A34);
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #000B3F,
+                    stop: 1 #001DA5
+                );
+            }
+            
+            QWidget {
+                background: transparent;
+                color: #FFFFFF;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+            }
+            
+            QPushButton {
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #F07D00,
+                    stop: 1 #8A4800
+                );
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 12px 20px;
+                margin: 8px 4px;
+                font-weight: 600;
+                font-size: 13px;
+                min-height: 20px;
+            }
+            
+            QPushButton:hover {
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #FF8A00,
+                    stop: 1 #A05000
+                );
+                transform: translateY(-1px);
+            }
+            
+            QPushButton:pressed {
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #D06D00,
+                    stop: 1 #743F00
+                );
+            }
+            
+            QLabel {
+                color: #FFFFFF;
+                padding: 6px 2px;
+                font-weight: 500;
+            }
+            
+            QTextEdit {
+                background: rgba(255, 255, 255, 0.1);
+                color: #FFFFFF;
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                border-radius: 12px;
+                padding: 15px;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+            
+            QTextEdit:focus {
+                border: 2px solid rgba(240, 125, 0, 0.6);
+            }
+            
+            QStatusBar {
+                background: rgba(0, 11, 63, 0.8);
+                color: white;
+                padding: 8px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
             }
         """)
 
-    def _define_colors(self):
-        self.columbia_blue = "#bfd7ea"
-        self.cadet_gray = "#91aec1"
-        self.air_force_blue = "#508ca4"
-        self.sea_green = "#0a8754"
-        self.cal_poly_green = "#004f2d"
-
-    def _setup_styles(self):
-        """Main stylesheet for color scheme and padding"""
-        self.setStyleSheet(f"""
-            QMainWindow {{
-                background-color: {self.columbia_blue};
-            }}
-            QWidget {{
-                background-color: {self.columbia_blue};
-                color: {self.cal_poly_green};
-                font-size: 15px;
-            }}
-            QPushButton {{
-                background-color: {self.air_force_blue};
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 10px 18px;
-                margin: 6px 0;
-            }}
-            QPushButton:hover {{
-                background-color: {self.sea_green};
-            }}
-            QLabel {{
-                color: {self.cal_poly_green};
-                padding: 4px 0;
-            }}
-            QTextEdit {{
-                background-color: {self.cadet_gray};
-                color: {self.cal_poly_green};
-                border-radius: 8px;
-                padding: 12px;
-                font-size: 15px;
-            }}
-            QStatusBar {{
-                background-color: {self.air_force_blue};
-                color: white;
-                padding: 6px;
-            }}
-        """)
-
     def _create_sidebar(self):
-        """Create the sidebar UI with buttons"""
+        """Create the enhanced sidebar UI with improved styling"""
         sidebar = QWidget()
         sidebar_layout = QVBoxLayout()
-        sidebar_layout.setContentsMargins(18, 18, 18, 18)
-        sidebar_layout.setSpacing(12)
+        sidebar_layout.setContentsMargins(20, 25, 20, 25)
+        sidebar_layout.setSpacing(15)
         sidebar.setLayout(sidebar_layout)
-        sidebar.setFixedWidth(180)
-        sidebar.setStyleSheet(f"background-color: {self.cadet_gray}; border-radius: 12px;")
+        sidebar.setFixedWidth(220)
+        
+        # Enhanced sidebar styling with glass effect
+        sidebar.setStyleSheet("""
+            QWidget {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+            }
+        """)
+
+        # Add title
+        title_label = QLabel("🔒 LockBox")
+        title_label.setStyleSheet("""
+            QLabel {
+                font-size: 18px;
+                font-weight: bold;
+                color: #FFFFFF;
+                padding: 10px 0;
+                border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+                margin-bottom: 10px;
+            }
+        """)
+        sidebar_layout.addWidget(title_label)
 
         # Server control section
         self._create_server_control(sidebar_layout)
@@ -125,51 +190,120 @@ class MainWindow(QMainWindow):
         return sidebar
 
     def _create_server_control(self, layout):
-        """Creates the server control button with indicator"""
-        server_row = QHBoxLayout()
-        server_row.setSpacing(10)
+        """Creates the enhanced server control section"""
+        server_label = QLabel("Server Status")
+        server_label.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                font-weight: 600;
+                color: #FFFFFF;
+                margin-top: 10px;
+                margin-bottom: 5px;
+            }
+        """)
+        layout.addWidget(server_label)
 
-        self.server_btn = QPushButton("Start Server")
+        server_row = QHBoxLayout()
+        server_row.setSpacing(12)
+
+        self.server_btn = QPushButton("▶ Start Server")
         self.server_btn.clicked.connect(self.toggle_server)
+        self.server_btn.setStyleSheet("""
+            QPushButton {
+                font-size: 12px;
+                padding: 10px 15px;
+            }
+        """)
 
         self.server_indicator = QLabel()
         self.set_server_indicator(False)
-        self.server_indicator.setFixedSize(16, 16)
-        self.server_indicator.setStyleSheet("margin-left: 8px; margin-right: 8px;")
+        self.server_indicator.setFixedSize(20, 20)
+        self.server_indicator.setStyleSheet("""
+            QLabel {
+                border-radius: 10px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+            }
+        """)
 
         server_row.addWidget(self.server_btn)
         server_row.addWidget(self.server_indicator)
         server_row.addStretch()
 
         layout.addLayout(server_row)
-        layout.addSpacing(10)
+        layout.addSpacing(15)
 
     def _add_sidebar_buttons(self, layout):
-        """Adds buttons to the sidebar"""
-        btn_send = QPushButton("Send Message")
+        """Adds enhanced buttons to the sidebar"""
+        # Main action buttons
+        btn_send = QPushButton("📤 Send Message")
         btn_send.clicked.connect(self.controller.show_send_page)
+        btn_send.setToolTip("Encrypt and send a secure message")
         layout.addWidget(btn_send)
 
-        btn_receive = QPushButton("Receive Message")
+        btn_receive = QPushButton("📥 Receive Message")
         btn_receive.clicked.connect(self.controller.show_receive_page)
+        btn_receive.setToolTip("Decrypt and read received messages")
         layout.addWidget(btn_receive)
 
-        layout.addSpacing(10)
+        layout.addSpacing(20)
 
-        btn_about = QPushButton("About")
+        # Utility buttons
+        btn_about = QPushButton("ℹ️ About")
         btn_about.clicked.connect(self.show_about)
+        btn_about.setToolTip("About LockBox application")
         layout.addWidget(btn_about)
 
-        btn_exit = QPushButton("Exit")
+        btn_exit = QPushButton("🚪 Exit")
         btn_exit.clicked.connect(self.close)
+        btn_exit.setToolTip("Close the application")
+        btn_exit.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #DC3545,
+                    stop: 1 #A71F2B
+                );
+            }
+            QPushButton:hover {
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #E74C5C,
+                    stop: 1 #C82333
+                );
+            }
+        """)
         layout.addWidget(btn_exit)
 
     def set_server_indicator(self, running: bool):
-        """Sets the server status indicator color"""
-        color = "#0a8754" if running else "#b22222"  # green or red
-        self.server_indicator.setStyleSheet(
-            f"background-color: {color}; border-radius: 8px; border: 1px solid #333;"
-        )
+        """Sets the enhanced server status indicator"""
+        if running:
+            color = "#28A745"  # Success green
+            self.server_indicator.setStyleSheet(f"""
+                QLabel {{
+                    background: qradialgradient(
+                        cx: 0.5, cy: 0.5, radius: 0.5,
+                        stop: 0 {color},
+                        stop: 0.7 {color},
+                        stop: 1 rgba(40, 167, 69, 0.3)
+                    );
+                    border-radius: 10px;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                }}
+            """)
+        else:
+            color = "#DC3545"  # Danger red
+            self.server_indicator.setStyleSheet(f"""
+                QLabel {{
+                    background: qradialgradient(
+                        cx: 0.5, cy: 0.5, radius: 0.5,
+                        stop: 0 {color},
+                        stop: 0.7 {color},
+                        stop: 1 rgba(220, 53, 69, 0.3)
+                    );
+                    border-radius: 10px;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                }}
+            """)
 
     def toggle_server(self):
         """Toggle between starting and stopping the server"""
@@ -179,10 +313,13 @@ class MainWindow(QMainWindow):
             self.controller.start_server()
 
     def update_server_status(self, running: bool):
-        """Updates the server status"""
+        """Updates the server status with enhanced styling"""
         self.server_running = running
         self.set_server_indicator(running)
-        self.server_btn.setText("Stop Server" if running else "Start Server")
+        if running:
+            self.server_btn.setText("⏹ Stop Server")
+        else:
+            self.server_btn.setText("▶ Start Server")
 
     def show_about(self):
         """Displays the About page"""

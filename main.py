@@ -3,6 +3,7 @@ import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from UserInterface.mainWindow import MainWindow  # Updated import
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 
 def create_app():
     """
@@ -13,6 +14,10 @@ def create_app():
         # Initialize the application
         app = QApplication(sys.argv)
         app.setApplicationName("LockBox")
+        
+        # Set application-wide font for better typography
+        font = QFont("Segoe UI", 10)
+        app.setFont(font)
 
         # Initialize the controller
         controller = SecureMessengerController(None)
@@ -31,10 +36,14 @@ def create_app():
         # Assign the controller's main window reference
         controller.main_window = window #check if this is needed
 
-        # Apply a linear gradient background to the window
+        # Apply the new linear gradient background to the window
         window.setStyleSheet("""
             QMainWindow {
-                background: linear-gradient(to bottom, #141A20, #212A34);  /* Gradient from dark to light */
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #000B3F,
+                    stop: 1 #001DA5
+                );
             }
         """)
 
