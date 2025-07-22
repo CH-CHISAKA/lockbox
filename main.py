@@ -31,10 +31,12 @@ def create_app():
         # Assign the controller's main window reference
         controller.main_window = window #check if this is needed
 
-        # Apply a linear gradient background to the window
+        # Apply a linear gradient background to the window with proper PyQt syntax
         window.setStyleSheet("""
             QMainWindow {
-                background: linear-gradient(to bottom, #141A20, #212A34);  /* Gradient from dark to light */
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #141A20, stop:1 #212A34);
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
         """)
 
@@ -55,4 +57,4 @@ if __name__ == "__main__":
         create_app()
     except Exception as e:
         print(f"Application failed to start: {e}")
-        sys.exit(1)  # Exit with error code
+        sys.exit(1)  # Exit with error codec

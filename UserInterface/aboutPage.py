@@ -1,98 +1,169 @@
-# Import necessary PyQt6 modules
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel  # For UI widgets and layout
-from PyQt6.QtCore import Qt  # For alignment and other core Qt enums
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QScrollArea, QFrame
+from PyQt6.QtCore import Qt
 
-# Define a custom QWidget subclass to represent the "About" page
+
 class AboutPage(QWidget):
     def __init__(self):
-        """
-        Constructor for the AboutPage widget.
-        Initializes the parent QWidget and sets up the user interface.
-        """
-        super().__init__()  # Call the parent class constructor
-        self._setup_ui()    # Call method to build and arrange UI elements
+        super().__init__()
+        self._setup_ui()
 
     def _setup_ui(self):
-        """
-        Sets up the layout and adds widgets (title and info label) to the About page.
-        """
-        # Create a vertical box layout to stack widgets vertically
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        content_widget = QWidget()
         layout = QVBoxLayout()
-        
-        # Set padding/margin around the layout: 24 pixels on each side
         layout.setContentsMargins(24, 24, 24, 24)
-        
-        # Set spacing between widgets within the layout to 16 pixels
         layout.setSpacing(16)
 
-        # Create the title label (header of the page)
-        title_label = self._create_title_label()
-        
-        # Create the informational label (descriptive text)
-        info_label = self._create_info_label()
+        # Add each section wrapped in a styled frame
+        layout.addWidget(self._wrap_section(self._create_title_label()))
+        layout.addWidget(self._wrap_section(self._create_info_label()))
+        layout.addWidget(self._wrap_section(self._create_features_label()))
+        layout.addWidget(self._wrap_section(self._create_technical_label()))
+        layout.addWidget(self._wrap_section(self._create_contact_label()))
 
-        # Add the created labels to the layout (in vertical order)
-        layout.addWidget(title_label)
-        layout.addWidget(info_label)
+        layout.addStretch()
+        content_widget.setLayout(layout)
+        scroll_area.setWidget(content_widget)
+        main_layout.addWidget(scroll_area)
+        self.setLayout(main_layout)
 
-        # Apply the layout to the current widget
-        self.setLayout(layout)
-
-        # Apply linear gradient background
+        # Global Style
         self.setStyleSheet("""
             QWidget {
-                background: linear-gradient(to bottom, #141A20, #212A34);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #0B0F1C, stop:1 #1B263B);
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QScrollArea {
+                border: none;
+                background: transparent;
+            }
+            QScrollBar:vertical {
+                background: rgba(255, 255, 255, 0.1);
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: rgba(255, 255, 255, 0.5);
             }
         """)
 
-    def _create_title_label(self) -> QLabel:
+    def _wrap_section(self, widget: QWidget) -> QFrame:
         """
-        Creates and returns a QLabel styled as the title for the About page.
+        Wraps a given widget in a stylized QFrame section.
         """
-        # Initialize the label with the title text
-        label = QLabel("About LockBox")
-        
-        # Apply inline CSS styling to the label: font size, weight, and color
-        label.setStyleSheet("""
-            font-size: 22px;
-            font-weight: bold;
-            color: #2E3440;
+        frame = QFrame()
+        frame_layout = QVBoxLayout()
+        frame_layout.addWidget(widget)
+        frame.setLayout(frame_layout)
+        frame.setStyleSheet("""
+            QFrame {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 20px;
+            }
         """)
-        
-        # Align the text to the left
-        label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        
-        # Set an accessible name for assistive technologies
+        return frame
+
+    def _create_title_label(self) -> QLabel:
+        label = QLabel("About LockBox")
+        label.setStyleSheet("""
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 10px;
+        """)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setAccessibleName("Title")
-        
-        # Return the fully configured label
         return label
 
     def _create_info_label(self) -> QLabel:
-        """
-        Creates and returns a QLabel containing detailed information about the app.
-        """
-        # Define the informational text shown on the About page
         info_text = (
-            "LockBox\n"
-            "A simple, secure messaging application for sending and receiving encrypted messages.\n"
-            "Developed as a project for BBT4102 Cryptography and Network Security.\n\n"
-            "By:\n"
-            "• 138402  Abdikadir Fatmasarah Abdirahman\n"
-            "• 136948  Wesonga Edward Chisaka\n"
+            "🛡️ LockBox is a secure messaging application designed for end-to-end encrypted communication.\n"
+            "Developed for BBT4102 Cryptography and Network Security.\n\n"
+            "Version: 1.0.0\n"
+            "Platform: Cross-platform (Windows, macOS, Linux)\n\n"
+            "Developers:\n"
+            "👨‍💻 138402  Abdikadir Fatmasarah Abdirahman\n"
+            "👨‍💻 136948  Wesonga Edward Chisaka\n"
         )
-        
-        # Create a QLabel with the multiline info text
         label = QLabel(info_text)
-        
-        # Enable word wrapping so long lines break into the next line
         label.setWordWrap(True)
-        
-        # Apply inline CSS to style the font and text color
-        label.setStyleSheet("font-size: 14px; color: #4C566A;")
-        
-        # Set an accessible name for screen readers and accessibility tools
+        label.setStyleSheet("""
+            font-size: 14px; 
+            color: #e0e0e0;
+            line-height: 1.4;
+        """)
         label.setAccessibleName("Information")
-        
-        # Return the configured label
+        return label
+
+    def _create_features_label(self) -> QLabel:
+        features_text = (
+            "🚀 Key Features:\n\n"
+            "🔐 AES-256-GCM End-to-End Encryption\n"
+            "📱 SMS-based OTP Verification\n"
+            "🌐 Automatic Network Device Discovery\n"
+            "📨 Peer-to-Peer Messaging without servers\n"
+            "🖥️ Cross-Platform Compatibility\n"
+            "🔒 Zero-Knowledge Message Handling\n"
+        )
+        label = QLabel(features_text)
+        label.setWordWrap(True)
+        label.setStyleSheet("""
+            font-size: 14px; 
+            color: #b0c4de;
+            line-height: 1.5;
+        """)
+        label.setAccessibleName("Features")
+        return label
+
+    def _create_technical_label(self) -> QLabel:
+        technical_text = (
+            "⚙️ Technical Specifications:\n\n"
+            "• Encryption: AES-256 with secure key derivation\n"
+            "• Framework: PyQt6 for GUI\n"
+            "• Network: Peer-to-peer via sockets\n"
+            "• OTP Service: SMS Gateway Integration\n"
+            "• Languages: Python 3.8+\n"
+        )
+        label = QLabel(technical_text)
+        label.setWordWrap(True)
+        label.setStyleSheet("""
+            font-size: 14px; 
+            color: #98fb98;
+            line-height: 1.5;
+        """)
+        label.setAccessibleName("Technical Info")
+        return label
+
+    def _create_contact_label(self) -> QLabel:
+        contact_text = (
+            "📨 License & Contact:\n\n"
+            "This project was developed for academic purposes under BBT4102.\n\n"
+            "For more information or support, please contact the development team.\n\n"
+            "© 2024 LockBox Team. All rights reserved."
+        )
+        label = QLabel(contact_text)
+        label.setWordWrap(True)
+        label.setStyleSheet("""
+            font-size: 12px; 
+            color: #dcdcdc;
+            line-height: 1.4;
+            font-style: italic;
+        """)
+        label.setAccessibleName("Contact")
         return label

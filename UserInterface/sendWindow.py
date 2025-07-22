@@ -3,6 +3,9 @@ from PyQt6.QtWidgets import (
     QMessageBox, QTextEdit, QHBoxLayout
 )
 import re
+import socket
+import uuid
+import platform
 
 class SendMessagePage(QWidget):
     def __init__(self, send_callback, encrypt_only_callback=None):
@@ -15,21 +18,37 @@ class SendMessagePage(QWidget):
         layout = QVBoxLayout()
 
         # Message Input
-        layout.addWidget(QLabel("Message:"))
+        message_label = QLabel("Message:")
+        message_label.setStyleSheet("background-color: transparent;")
+        layout.addWidget(message_label)
         self.message_input = QLineEdit()
         self.message_input.setPlaceholderText("Enter your message here...")
         layout.addWidget(self.message_input)
 
         # Phone Input
-        layout.addWidget(QLabel("Receiver Phone:"))
+        phone_label = QLabel("Receiver Phone:")
+        phone_label.setStyleSheet("background-color: transparent;")
+        layout.addWidget(phone_label)
         self.phone_input = QLineEdit()
         self.phone_input.setPlaceholderText("Enter receiver's phone number")
         layout.addWidget(self.phone_input)
 
         # Peer Device Selection
-        layout.addWidget(QLabel("Peer Device:"))
+        peer_label = QLabel("Peer Device:")
+        peer_label.setStyleSheet("background-color: transparent;")
+        layout.addWidget(peer_label)
         self.ip_dropdown = QComboBox()
         layout.addWidget(self.ip_dropdown)
+
+        # Local Device Info
+        local_info_label = QLabel("Local Device Information:")
+        local_info_label.setStyleSheet("font-weight: bold; margin-top: 10px; background-color: transparent;")
+        layout.addWidget(local_info_label)
+        
+        self.local_device_info = QLabel(self._get_local_device_info())
+        self.local_device_info.setStyleSheet("color: #b0c4de; font-size: 12px; margin-bottom: 10px;")
+        self.local_device_info.setWordWrap(True)
+        layout.addWidget(self.local_device_info)
 
         # Button Layout
         button_layout = QHBoxLayout()
@@ -41,11 +60,14 @@ class SendMessagePage(QWidget):
 
         self.setLayout(layout)
 
-        # Styling
+        # Styling with proper PyQt syntax
         self.setStyleSheet("""
             QWidget {
-                background: linear-gradient(to bottom, #141A20, #212A34);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #141A20, stop:1 #212A34);
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
+                           
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
@@ -53,29 +75,97 @@ class SendMessagePage(QWidget):
                 font-weight: bold;
                 border-radius: 4px;
                 border: none;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
             QPushButton:hover {
                 background-color: #45a049;
             }
+            QPushButton:disabled {
+                background-color: #555555;
+                color: #aaaaaa;
+                cursor: not-allowed;
+            }
+                           
             QLabel {
                 color: white;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
             QLineEdit, QTextEdit {
                 background-color: #2e3b47;
                 color: white;
-                padding: 6px;
+                padding: 8px;
+                border: 1px solid #4a5a6a;
                 border-radius: 4px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QLineEdit:focus, QTextEdit:focus {
+                border: 2px solid #4CAF50;
+            }
+            QComboBox {
+                background-color: #2e3b47;
+                color: white;
+                padding: 8px;
+                border: 1px solid #4a5a6a;
+                border-radius: 4px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+            }
+            QComboBox:focus {
+                border: 2px solid #4CAF50;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid white;
+                margin-right: 5px;
             }
         """)
 
     def _add_action_buttons(self, button_layout):
-        send_button = QPushButton("Send Secure Message")
-        send_button.clicked.connect(self.validate_and_send)
-        button_layout.addWidget(send_button)
+        self.send_button = QPushButton("Send Secure Message")
+        self.send_button.clicked.connect(self.validate_and_send)
+        self.send_button.setEnabled(False)  # Initially disabled
+        button_layout.addWidget(self.send_button)
 
-        encrypt_only_button = QPushButton("Encrypt Only (Don't Send)")
-        encrypt_only_button.clicked.connect(self.validate_and_encrypt_only)
-        button_layout.addWidget(encrypt_only_button)
+        self.encrypt_only_button = QPushButton("Encrypt (Send)")
+        self.encrypt_only_button.clicked.connect(self.validate_and_encrypt_only)
+        self.encrypt_only_button.setEnabled(False)  # Initially disabled
+        button_layout.addWidget(self.encrypt_only_button)
+
+        # Connect input validation
+        self.message_input.textChanged.connect(self.input_changed)
+        self.phone_input.textChanged.connect(self.input_changed)
+        # This ensures the status is checked each time a device is selected.
+        self.ip_dropdown.currentIndexChanged.connect(self.input_changed)
+
+    def input_changed(self):
+        message = self.message_input.text().strip()
+        phone = self.phone_input.text().strip()
+        phone_valid = self._is_valid_phone_number(phone)
+        device_selected = self.ip_dropdown.currentIndex() != -1
+
+        if not (message and phone_valid and device_selected):
+            self.send_button.setEnabled(False)
+            self.encrypt_only_button.setEnabled(False)
+            return
+
+        # Check server reachability
+        device_name = self.ip_dropdown.currentText()
+        ip = self.device_map.get(device_name, device_name)
+
+        if not self.is_server_reachable(ip):
+            self.send_button.setEnabled(False)
+            self.encrypt_only_button.setEnabled(False)
+            return
+
+        # All validations passed
+        self.send_button.setEnabled(True)
+        self.encrypt_only_button.setEnabled(True)
+
+
 
     def _setup_encrypted_message_display(self, layout):
         self.encrypted_label = QLabel("Encrypted Message (copy below):")
@@ -87,15 +177,7 @@ class SendMessagePage(QWidget):
         self.encrypted_output.setVisible(False)
         layout.addWidget(self.encrypted_output)
 
-    def set_ip_choices(self, device_list):
-        """Update the device list in the dropdown menu."""
-        self.ip_dropdown.clear()
-        self.device_map = {}
-        for entry in device_list:
-            name = entry['device_name']
-            ip = entry['ip']
-            self.device_map[name] = ip
-            self.ip_dropdown.addItem(name)
+
 
     def get_inputs(self):
         """Retrieve user inputs for message sending."""
@@ -172,3 +254,69 @@ class SendMessagePage(QWidget):
         self.encrypted_label.setVisible(True)
         self.encrypted_output.setVisible(True)
         self.encrypted_output.setPlainText(encrypted_msg)
+
+    def _get_local_device_info(self) -> str:
+        """Get local device information including hostname, IP, and MAC address."""
+        try:
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            mac_address = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) 
+                                   for ele in range(0, 8*6, 8)][::-1])
+            system_info = f"{platform.system()} {platform.release()}"
+            
+            return (f"Hostname: {hostname}\n"
+                   f"IP Address: {local_ip}\n"
+                   f"MAC Address: {mac_address}\n"
+                   f"System: {system_info}")
+        except Exception as e:
+            return f"Unable to retrieve device information: {str(e)}"
+
+    def _get_enhanced_local_ip(self):
+        """Get local IP with better detection."""
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # Connect to a non-routable address to determine local IP
+            s.connect(('10.255.255.255', 1))
+            IP = s.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            s.close()
+        return IP
+    
+    # Add Server Availability Check
+    # Add a method like this inside your SendMessagePage class:
+    def is_server_reachable(self, ip: str, port: int = 5000, timeout: float = 1.0) -> bool:
+        """Try to connect to the selected IP to see if the server is reachable."""
+        try:
+            with socket.create_connection((ip, port), timeout=timeout):
+                return True
+        except (socket.timeout, ConnectionRefusedError, OSError):
+            return False
+
+
+    def set_ip_choices(self, device_list):
+        """Update the device list in the dropdown menu with enhanced formatting."""
+        self.ip_dropdown.clear()
+        self.device_map = {}
+        
+        # Add local device information to the list
+        try:
+            local_hostname = socket.gethostname()
+            local_ip = self._get_enhanced_local_ip()
+            local_entry = f"🏠 {local_hostname} (Local - {local_ip})"
+            self.device_map[local_entry] = local_ip
+            self.ip_dropdown.addItem(local_entry)
+            
+            # Add separator
+            self.ip_dropdown.insertSeparator(1)
+        except Exception:
+            pass
+        
+        for entry in device_list:
+            name = entry['device_name']
+            ip = entry['ip']
+            # Enhanced display format
+            display_name = f"🌐 {name} ({ip})"
+            self.device_map[display_name] = ip
+            self.ip_dropdown.addItem(display_name)

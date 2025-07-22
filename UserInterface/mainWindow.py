@@ -12,7 +12,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.controller = controller
         self.setWindowTitle("LockBox")
-        self.resize(600, 400)
+        
+        # Better window management
+        self.resize(800, 600)
+        self.setMinimumSize(600, 400)
+        
+        # Center the window on screen
+        self._center_window()
 
         # Define color scheme
         self._define_colors()
@@ -30,10 +36,27 @@ class MainWindow(QMainWindow):
         self.central_layout.setSpacing(16)
         self.central_area.setLayout(self.central_layout)
 
-        # Initialize central area log
-        self.central_log = QTextEdit("Welcome to LockBox.")
+        # Initialize central area log with welcome message
+        self.central_log = QTextEdit()
         self.central_log.setReadOnly(True)
         self.central_log.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+        welcome_text = """
+Welcome to LockBox
+
+Your secure messaging companion for encrypted communications.
+
+Features:
+• End-to-end encryption with AES-256
+• Secure OTP verification via SMS
+• Network device discovery
+• Real-time message encryption/decryption
+
+Get started by clicking 'Start Server', 'Send Message' to encrypt and send a secure message,
+or 'Receive Message' to decrypt an incoming message.
+
+Stay secure! 🛡️
+        """
+        self.central_log.setPlainText(welcome_text.strip())
         self.central_layout.addWidget(self.central_log)
 
         # Main layout: sidebar + central area
@@ -50,10 +73,12 @@ class MainWindow(QMainWindow):
         # Server state
         self.server_running = False
 
-        # Apply linear gradient background
+        # Apply linear gradient background with proper PyQt syntax
         self.setStyleSheet("""
             QMainWindow {
-                background: linear-gradient(to bottom, #141A20, #212A34);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                    stop:0 #141A20, stop:1 #212A34);
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }
         """)
 
@@ -69,19 +94,23 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(f"""
             QMainWindow {{
                 background-color: {self.columbia_blue};
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QWidget {{
                 background-color: {self.columbia_blue};
                 color: {self.cal_poly_green};
                 font-size: 15px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QPushButton {{
                 background-color: {self.air_force_blue};
                 color: white;
                 border: none;
-                border-radius: 6px;
-                padding: 10px 18px;
-                margin: 6px 0;
+                border-radius: 12px;
+                padding: 12px 16px;
+                margin: 32px 0;
+                font-size: 16px; 
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QPushButton:hover {{
                 background-color: {self.sea_green};
@@ -89,6 +118,7 @@ class MainWindow(QMainWindow):
             QLabel {{
                 color: {self.cal_poly_green};
                 padding: 4px 0;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QTextEdit {{
                 background-color: {self.cadet_gray};
@@ -96,11 +126,13 @@ class MainWindow(QMainWindow):
                 border-radius: 8px;
                 padding: 12px;
                 font-size: 15px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
             QStatusBar {{
                 background-color: {self.air_force_blue};
                 color: white;
                 padding: 6px;
+                font-family: 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', sans-serif;
             }}
         """)
 
@@ -109,10 +141,19 @@ class MainWindow(QMainWindow):
         sidebar = QWidget()
         sidebar_layout = QVBoxLayout()
         sidebar_layout.setContentsMargins(18, 18, 18, 18)
-        sidebar_layout.setSpacing(12)
+        sidebar_layout.setSpacing(32)
         sidebar.setLayout(sidebar_layout)
         sidebar.setFixedWidth(180)
-        sidebar.setStyleSheet(f"background-color: {self.cadet_gray}; border-radius: 12px;")
+
+        # ✅ Updated: Apply gradient background to sidebar
+        sidebar.setStyleSheet("""
+            background: qlineargradient(
+                x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #8091AB,
+                stop: 1 #4C5C6D
+            );
+            border-radius: 12px;
+        """)
 
         # Server control section
         self._create_server_control(sidebar_layout)
@@ -127,10 +168,13 @@ class MainWindow(QMainWindow):
     def _create_server_control(self, layout):
         """Creates the server control button with indicator"""
         server_row = QHBoxLayout()
-        server_row.setSpacing(10)
+        server_row.setSpacing(5)
 
         self.server_btn = QPushButton("Start Server")
         self.server_btn.clicked.connect(self.toggle_server)
+
+        self.server_btn.setFixedHeight(35)
+        self.server_btn.setFixedWidth(120)
 
         self.server_indicator = QLabel()
         self.set_server_indicator(False)
@@ -163,6 +207,12 @@ class MainWindow(QMainWindow):
         btn_exit = QPushButton("Exit")
         btn_exit.clicked.connect(self.close)
         layout.addWidget(btn_exit)
+
+        btn_send.setFixedHeight(40)
+        btn_receive.setFixedHeight(40)
+        btn_about.setFixedHeight(40)
+        btn_exit.setFixedHeight(40)
+
 
     def set_server_indicator(self, running: bool):
         """Sets the server status indicator color"""
@@ -200,3 +250,14 @@ class MainWindow(QMainWindow):
     def show_log(self):
         """Shows the log in the central area"""
         self.set_central_widget(self.central_log)
+
+    def _center_window(self):
+        """Center the window on the screen"""
+        from PyQt6.QtGui import QGuiApplication
+        screen = QGuiApplication.primaryScreen().geometry()
+        size = self.geometry()
+        x = (screen.width() - size.width()) // 2
+        y = (screen.height() - size.height()) // 2
+        self.move(x, y)
+
+
