@@ -1,0 +1,13 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+# Platform-specific
+ios/Flutter/.last_build_id
+# OS
+.DS_Store
+Thumbs.db
